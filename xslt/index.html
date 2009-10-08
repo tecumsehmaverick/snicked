@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>XSLT Editor</title>
+<link href="../assets/editor.css" rel="stylesheet" type="text/css">
+<script src="../assets/jquery.js" type="text/javascript"></script>
+<script src="../assets/jquery.genericeditor.js" type="text/javascript"></script>
+<script src="../assets/jquery.advancededitor.js" type="text/javascript"></script>
+<script type="text/javascript">
+	
+	$(document).ready(function() {
+		$('textarea').focus().advancedEditor({
+			snippets:	'snippets.js',
+			completes:	'completes.js'
+		});
+	});
+	
+</script>
+<textarea></textarea>

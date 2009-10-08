@@ -1,0 +1,18 @@
+* {
+	border: none;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	font: 11px 'monaco', 'bitstream vera sans mono';
+	margin: 0;
+	outline: none;
+	padding: 0;
+}
+textarea {
+	bottom: 0;
+	height: 100%;
+	left: 0;
+	padding: 10px;
+	position: absolute;
+	width: 100%;
+	top: 0;
+}
