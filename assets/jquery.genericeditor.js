@@ -39,7 +39,24 @@
 				object.keyHandlers.push(callback);
 			};
 			
+			// Force browser to accept tabs:
+			object.bind('keydown', function(event) {
+				var key = event.keyCode | event.charCode | event.which;
+				
+				if (key == 9) {
+					event.type = 'keypress';
+					event.forceTab = true;
+					object.trigger(event);
+					
+					return false;
+				}
+			});
+			
 			object.bind('keypress', function(event) {
+				var key = event.keyCode | event.charCode | event.which;
+				
+				if (key == 9 && !event.forceTab) return;
+				
 				var value = object.val();
 				var index = this.selectionStart;
 				var handled = false;
