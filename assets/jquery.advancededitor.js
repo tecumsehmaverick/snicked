@@ -6,239 +6,142 @@
 		var editors = this.genericEditor();
 		var snippets = {}, completes = {};
 		var language = {};
-		var indentationRules = {};
+		var autocomplete = {};
+		var indentationRules = [];
 		
 		if (language_source) jQuery.getJSON(language_source, function(data) {
 			language = data;
 			snippets = language.snippets;
 			completes = language.completes;
+			autocomplete = language.autocomplete;
 			indentationRules = language.indentationRules;
 		});
 		
 	/*-------------------------------------------------------------------------
-		Snippets
+		Autocomplete
 	-------------------------------------------------------------------------*/
 		
 		(function() {
 			var current = null;
+			var next = function(editor, selection) {
+				var position = current.points.shift();
+				var length = editor.val().length;
+				
+				current.offset += (length - current.length);
+				current.length = length;
+				
+				selection.start = position + current.offset;
+				selection.end = selection.start;
+				
+				editor.setSelection(selection);
+				
+				if (current.points.length == 0) {
+					current = null;
+					
+					return true;
+				}
+				
+				return true;
+			};
 			
-			editors.addKeyHandler(function(object, key) {
-				if (!current && key == 9) {
-					var before = object.selection.getPrecedingText();
-					var word = before.match(/\b[\w\-]+$/);
+			editors.addKeyHandler(function(editor, key) {
+				var selection = editor.getSelection();
+				
+				// Find completion:
+				if (!current && autocomplete.keys[key]) {
+					var trigger = autocomplete.keys[key];
+					var before = editor.getBefore(selection);
+					var after = editor.getAfter(selection);
+					var completed = false;
 					
-					if (!word || !snippets[word[0]]) return false;
-					
-					var snippet = snippets[word[0]], point = null;
-					var indent = object.getIndentation();
-					var lines = snippet.split("\n");
-					
-					// Remove trigger:
-					before = before.slice(0, 0 - word[0].length);
-					
-					// Reindent snippet:
-					lines = jQuery(lines).map(function(index, line) {
-						if (!index) return line;
+					jQuery(autocomplete.rules).each(function(index, rule) {
+						if (rule.key != trigger) return true;
 						
-						return indent + line;
+						if (!rule.before) rule.before = /$/;
+						if (!rule.after) rule.after = /^/;
+						
+						if (!rule.before.test(before) || !rule.after.test(after)) {
+							return true;
+						}
+						
+						var snippet = rule.snippet, point = null;
+						var indent = editor.getIndentation();
+						var lines = snippet.split("\n");
+						var captures = before.match(rule.before).concat(after.match(rule.after));
+						
+						// Remove matched parts:
+						editor.setBefore(selection, before.replace(rule.before, ''));
+						editor.setAfter(selection, after.replace(rule.after, ''));
+						
+						before = editor.getBefore(selection);
+						after = editor.getAfter(selection);
+						
+						// Reindent snippet:
+						lines = jQuery(lines).map(function(index, line) {
+							if (!index) return line;
+							
+							return indent + line;
+						});
+						
+						snippet = lines.get().join("\n");
+						
+						// Set current state:
+						current = {
+							length:		0,
+							offset:		0,
+							selection:	selection,
+							points:		[]
+						};
+						
+						// Find all capture points:
+						while ((point = snippet.match(/\{#([0-9]+)\}/))) {
+							var index = parseInt(point[1]);
+							
+							if (captures[index]) {
+								snippet = snippet.replace(point[0], captures[index]);
+							}
+							
+							else {
+								snippet = snippet.replace(point[0], '');
+							}
+						}
+						
+						// Find all cursor points:
+						while ((point = snippet.match(/\{\$[0-9]+\}/))) {
+							current.points.push(
+								snippet.indexOf(point[0])
+								+ before.length
+							);
+							snippet = snippet.replace(point[0], '');
+						}
+						
+						// No jump points:
+						if (!current.points.length) {
+							before += snippet;
+							current = null;
+							editor.setBefore(selection, before);
+							completed = true;
+							
+							return false;
+						}
+						
+						editor.insertBefore(selection, snippet);
+						
+						current.length = editor.val().length;
+						current.position = before.length;
+						
+						next(editor, selection);
+						completed = true;
+						
+						return false;
 					});
 					
-					snippet = lines.get().join("\n");
-					
-					current = {
-						length:		0,
-						offset:		0,
-						selection:	object.selection.getRange(),
-						points:		[]
-					};
-					
-					// Find all cursor points:
-					while ((point = snippet.match(/\$/))) {
-						current.points.push(
-							snippet.indexOf(point[0])
-							+ before.length
-						);
-						snippet = snippet.replace(point[0], '');
-					}
-					
-					// No jump points:
-					if (!current.points.length) {
-						before += snippet;
-						current = null;
-						object.selection.setPrecedingText(before);
-						
-						return true;
-					}
-					
-					object.selection.insertTextAfter(snippet);
-					object.selection.setPrecedingText(before);
-					
-					current.length = object.val().length;
-					current.position = before.length;
+					return completed;
 				}
 				
 				// Work on current snippet:
 				if (current && key == 9) {
-					var position = current.points.shift();
-					var length = object.val().length;
-					
-					current.offset += (length - current.length);
-					current.length = length;
-					
-					object.selection.setRange(
-						position + current.offset
-					);
-					
-					if (current.points.length == 0) {
-						current = null;
-						
-						return true;
-					}
-					
-					return true;
-				}
-				
-				return false;
-			});
-		})();
-		
-	/*-------------------------------------------------------------------------
-		Completes
-	-------------------------------------------------------------------------*/
-		
-		(function() {
-			editors.addKeyHandler(function(object, key) {
-				var after = object.selection.getFollowingText();
-				var before = object.selection.getPrecedingText();
-				
-				// Insert ending tag, child and attribute:
-				if (key == 62 && /<[a-z0-9:-]+$/.test(before)) {
-					var matches = /<([a-z0-9:-]+)$/.exec(before);
-					
-					if (matches.length != 2) return false;
-					
-					var name = matches.pop();
-					var item = completes[name];
-					
-					if (item && item.indent_mode == 'block') {
-						var indent = object.getIndentation();
-						
-						object.selection.insertTextBefore(
-							">\n" + indent + "\t"
-						);
-						object.selection.insertTextAfter(
-							"\n" + indent + '</' + name + '>'
-						);
-					}
-					
-					else {
-						object.selection.insertTextBefore(">");
-						object.selection.insertTextAfter('</' + name + '>');
-					}
-					
-					if (item && item.child) {
-						object.selection.insertTextBefore(
-							'<' + item.child + '>'
-						);
-						object.selection.insertTextAfter(
-							'</' + item.child + '>'
-						);
-					}
-					
-					return true;
-				}
-				
-				if (key != 13) return false;
-				
-				var open_before = /<([a-z0-9:-]+)>$/.exec(before);
-				var close_after = /^<\/([a-z0-9:-]+)>/.exec(after);
-				var open_close_before = /<([a-z0-9:-]+)><\/([a-z0-9:-]+)>$/.exec(before);
-				
-				// Remove empty list item and jump to end:
-				if (open_before && close_after && open_before[1] == close_after[1]) {
-					var name = open_before[1];
-					var item = completes[name];
-					
-					if (!item || item.indent_mode != 'list-item') return false;
-					
-					object.selection.setPrecedingText(
-						before.replace(/\s*<[a-z0-9:-]+>$/, '')
-					);
-					object.selection.setFollowingText(
-						after.replace(/^<\/[a-z0-9:-]+>/, '')
-					);
-					
-					return true;
-				}
-				
-				else if (open_close_before && open_close_before[1] == open_close_before[2]) {
-					var name = open_close_before[1];
-					var item = completes[name];
-					var index = 0;
-					
-					if (!item || item.indent_mode != 'list-item') return false;
-					
-					object.selection.setPrecedingText(
-						before.replace(/\s*<[a-z0-9:-]+><\/[a-z0-9:-]+>$/, '')
-					);
-					
-					return true;
-				}
-				
-				// Insert completable sibling:
-				if (/<[a-z0-9:-]+>$/.test(before)) {
-					var name = /<([a-z0-9:-]+)>$/.exec(before).pop();
-					var item = completes[name];
-					
-					if (!item || item.indent_mode != 'block' || !item.child) return false;
-					
-					var indent = object.getIndentation();
-					
-					object.selection.insertTextBefore(
-						"\n\t" + indent + '<' + item.child + '>'
-					);
-					object.selection.insertTextAfter(
-						'</' + item.child + '>'
-					);
-					
-					return true;
-				}
-				
-				if (/<\/[a-z0-9:-]+>$/.test(before)) {
-					var name = /<\/([a-z0-9:-]+)>$/.exec(before).pop();
-					var item = completes[name];
-					
-					if (!item || item.indent_mode != 'list-item' || !item.sibling) return false;
-					
-					var indent = object.getIndentation();
-					
-					object.selection.insertTextBefore(
-						"\n" + indent + '<' + item.sibling + '>'
-					);
-					object.selection.insertTextAfter(
-						'</' + item.sibling + '>'
-					);
-					
-					return true;
-				}
-				
-				else if (/^<\/[a-z0-9:-]+>/.test(after)) {
-					var name = /^<\/([a-z0-9:-]+)>/.exec(after).pop();
-					var item = completes[name];
-					
-					if (!item || item.indent_mode != 'list-item' || !item.sibling) return false;
-					
-					var ignore = /^.*$/m.exec(after).pop();
-					var indent = object.getIndentation();
-					
-					object.selection.insertTextBefore(
-						ignore + "\n" + indent + '<' + item.sibling + '>'
-					);
-					object.selection.setFollowingText(
-						'</' + item.sibling + '>' + after.slice(ignore.length)
-					);
-					
-					return true;
+					return next(editor, selection);
 				}
 				
 				return false;
@@ -251,8 +154,10 @@
 		
 		(function() {
 			editors.addKeyHandler(function(editor, key) {
+				var selection = editor.getSelection();
+				
 				if (key == 9) {
-					editor.selection.insertTextBefore("\t");
+					editor.insertBefore(selection, "\t");
 					
 					return true;
 				}
@@ -262,6 +167,7 @@
 					var before = editor.selection.getPrecedingText();
 					var indent = editor.getIndentation();
 					
+					/*
 					jQuery(indentationRules).each(function(index, rule) {
 						var matched = false;
 						
@@ -289,8 +195,9 @@
 							return false;
 						}
 					});
+					*/
 					
-					editor.selection.insertTextBefore("\n" + indent);
+					editor.insertBefore(selection, "\n" + indent);
 					
 					return true;
 				}

@@ -26,11 +26,56 @@
 				};
 			};
 			
-			object.setSelection = function(range) {
+			object.setSelection = function(selection) {
 				var direct = object.get(0);
 				
-				direct.selectionStart = range.start;
-				direct.selectionEnd = range.end;
+				direct.selectionStart = selection.start;
+				direct.selectionEnd = selection.end;
+			};
+			
+		/*---------------------------------------------------------------------
+			Manipulation
+		---------------------------------------------------------------------*/
+			
+			object.getAfter = function(selection) {
+				var direct = object.get(0);
+				
+				return object.val().slice(selection.end);
+			};
+			
+			object.insertAfter = function(selection, text) {
+				var after = object.getAfter(selection);
+				
+				object.setAfter(selection, text + after);
+			};
+			
+			object.setAfter = function(selection, text) {
+				var before = object.val().slice(0, selection.end);
+				
+				object.val(before + text);
+				object.setSelection(selection);
+			};
+			
+			object.getBefore = function(selection) {
+				return object.val().slice(0, selection.start);
+			};
+			
+			object.insertBefore = function(selection, text) {
+				var before = object.getBefore(selection);
+				
+				object.setBefore(selection, before + text);
+			};
+			
+			object.setBefore = function(selection, text) {
+				var before = object.val().slice(0, selection.start);
+				var after = object.val().slice(selection.start);
+				var offset = before.length - text.length;
+				
+				selection.start -= offset;
+				selection.end -= offset;
+				
+				object.val(text + after);
+				object.setSelection(selection);
 			};
 			
 		/*---------------------------------------------------------------------

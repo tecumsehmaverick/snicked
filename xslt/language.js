@@ -15,6 +15,69 @@
 		'when':							'<xsl:when test="$">\n\t$\n</xsl:when>',
 		'xslt':							'<?xml version="1.0" encoding="UTF-8"?>\n<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\t$\n</xsl:stylesheet>'
 	},
+	
+	// Autocompletion:
+	autocomplete:	{
+		keys: {
+			9:		'tab',
+			13:		'enter'
+		},
+		rules:	[
+			// Definition list:
+			{
+				key:			'enter',
+				before:			/<dl>$/,
+				snippet:		'{#0}\n\t<dt>{$0}</dt>\n</dl>'
+			},
+			{
+				key:			'enter',
+				before:			/<dt>.*?$/,
+				after:			/^<\/dt>/,
+				snippet:		'{#0}{#1}\n<dd>{$0}</dd>'
+			},
+			{
+				key:			'enter',
+				before:			/<\/dt>\s*$/,
+				snippet:		'{#0}\n<dd>{$0}</dd>'
+			},
+			{
+				key:			'enter',
+				before:			/<dd>$/,
+				after:			/^<\/dd>/,
+				snippet:		'{#0}{#1}\n<dt>{$0}</dt>'
+			},
+			{
+				key:			'enter',
+				before:			/<\/dd>\s*$/,
+				snippet:		'{#0}\n<dt>{$0}</dt>'
+			},
+			
+			// XSL Template:
+			{
+				key:			'tab',
+				before:			/template$/,
+				snippet:		'<xsl:{#0} match="{$0}" mode="{$1}">\n\t{$2}\n</xsl:{#0}>'
+			},
+			
+			// XSL Apply templates:
+			{
+				key:			'enter',
+				before:			/(<xsl:apply-templates[^<]*?)\s*\/?>(\s*)$/,
+				snippet:		'{#1}>{#3}\n\t<xsl:with-param name="{$0}" select="{$1}" />{$2}\n</xsl:apply-templates>'
+			},
+			{
+				key:			'tab',
+				before:			/apply-templates$/,
+				snippet:		'<xsl:{#0} select="{$0}" mode="{$1}" />{$2}'
+			},
+			{
+				key:			'enter',
+				before:			/<xsl:with-param[^<]+\/>$/,
+				snippet:		'{#0}\n<xsl:with-param name="{$0}" select="{$1}" />{$2}'
+			}
+		]
+	},
+	
 	indentationRules:	[
 		{
 			matchBefore:	/[{]$/,
@@ -29,62 +92,5 @@
 			matchBefore:	/<x>$/,
 			indentLevel:	1
 		},
-	],
-	completes:			{
-		// HTML elements:
-		blockquote: {
-			indent_mode:	'block'
-		},
-		p: {
-			indent_mode:	'block'
-		},
-		
-		// Definition list:
-		dl: {
-			indent_mode:	'block',
-			child:			'dt'
-		},
-		dt: {
-			indent_mode:	'list-item',
-			sibling:		'dd'
-		},
-		dd: {
-			indent_mode:	'list-item',
-			sibling:		'dt'
-		},
-		
-		// Normal list:
-		ol:	{
-			indent_mode:	'block',
-			child:			'li'
-		},
-		ul:	{
-			indent_mode:	'block',
-			child:			'li'
-		},
-		li: {
-			indent_mode:	'list-item',
-			sibling:		'li'
-		},
-		
-		// XSLT elements:
-		'xsl:choose': {
-			indent_mode:	'block'
-		},
-		'xsl:if': {
-			indent_mode:	'block'
-		},
-		'xsl:otherwise': {
-			indent_mode:	'block'
-		},
-		'xsl:stylesheet': {
-			indent_mode:	'block'
-		},
-		'xsl:template': {
-			indent_mode:	'block'
-		},
-		'xsl:when': {
-			indent_mode:	'block'
-		},
-	}
+	]
 }
