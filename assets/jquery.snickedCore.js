@@ -1,8 +1,8 @@
 /*-----------------------------------------------------------------------------
-	Generic Editor jQuery Plugin
+	Snicked Core Editor jQuery Plugin
 -----------------------------------------------------------------------------*/
 	
-	jQuery.fn.genericEditor = function() {
+	jQuery.fn.snickedCore = function() {
 		var objects = this;
 		
 		objects = objects.map(function() {

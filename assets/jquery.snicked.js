@@ -1,20 +1,15 @@
 /*-----------------------------------------------------------------------------
-	Advanced Editor jQuery Plugin
+	Snicked Editor jQuery Plugin
 -----------------------------------------------------------------------------*/
 	
-	jQuery.fn.advancedEditor = function(language_source) {
-		var editors = this.genericEditor();
-		var snippets = {}, completes = {};
-		var language = {};
+	jQuery.fn.snicked = function(language_source) {
+		var editors = this.snickedCore();
 		var autocomplete = {};
-		var indentationRules = [];
+		var indentation = [];
 		
 		if (language_source) jQuery.getJSON(language_source, function(data) {
-			language = data;
-			snippets = language.snippets;
-			completes = language.completes;
-			autocomplete = language.autocomplete;
-			indentationRules = language.indentationRules;
+			autocomplete = data.autocomplete;
+			indentation = data.indentation;
 		});
 		
 	/*-------------------------------------------------------------------------
