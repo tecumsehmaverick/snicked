@@ -6,7 +6,25 @@
 			13:		'enter'
 		},
 		rules:	[
-			// Definition list:
+			// HTML List:
+			{
+				key:			'tab',
+				before:			/<(ol|ul)[^<>]*?>$/,
+				snippet:		'{#0}\n\t<li>{$0}</li>\n</{#1}>'
+			},
+			{
+				key:			'enter',
+				before:			/<li>.*?$/,
+				after:			/^<\/li>/,
+				snippet:		'{#0}{#1}\n<li>{$0}</li>'
+			},
+			{
+				key:			'enter',
+				before:			/<\/li>\s*$/,
+				snippet:		'{#0}\n<li>{$0}</li>'
+			},
+			
+			// HTML Definition List:
 			{
 				key:			'tab',
 				before:			/<dl[^>]*?>$/,
@@ -35,17 +53,10 @@
 				snippet:		'{#0}\n<dt>{$0}</dt>'
 			},
 			
-			// XSL Template:
-			{
-				key:			'tab',
-				before:			/template$/,
-				snippet:		'<xsl:{#0} match="{$0}" mode="{$1}">\n\t{$2}\n</xsl:{#0}>'
-			},
-			
 			// XSL Apply templates:
 			{
 				key:			'tab',
-				before:			/(<xsl:apply-templates[^<]*?)\s*\/?>(\s*)$/,
+				before:			/(<xsl:apply-templates[^<>]*?)\s*\/?>(\s*)$/,
 				snippet:		'{#1}>{#3}\n\t<xsl:with-param name="{$0}" select="{$1}" />{$2}\n</xsl:apply-templates>'
 			},
 			{
@@ -55,8 +66,94 @@
 			},
 			{
 				key:			'enter',
-				before:			/<xsl:with-param[^<]+\/>$/,
+				before:			/<xsl:with-param[^<>]+\/>$/,
 				snippet:		'{#0}\n<xsl:with-param name="{$0}" select="{$1}" />{$2}'
+			},
+			
+			// XSL Choose:
+			{
+				key:			'tab',
+				before:			/<xsl:choose[^<>]*?>$/,
+				snippet:		'{#0}\n\t<xsl:when test="{$0}">\n\t\t{$1}\n\t</xsl:when>\n</xsl:choose>'
+			},
+			{
+				key:			'tab',
+				before:			/choose$/,
+				snippet:		'<xsl:{#0}>\n\t<xsl:when test="{$0}">\n\t\t{$1}\n\t</xsl:when>\n</xsl:{#0}>'
+			},
+			
+			// XSL Copy/Value Of:
+			{
+				key:			'tab',
+				before:			/(copy|value)-of$/,
+				snippet:		'<xsl:{#0} select="{$0}" />'
+			},
+			
+			// XSL If/When:
+			{
+				key:			'tab',
+				before:			/<xsl:(if|when)[^<>]*?>$/,
+				snippet:		'{#0}\n\t{$1}\n</xsl:{#1}>'
+			},
+			{
+				key:			'tab',
+				before:			/if$|when$/,
+				snippet:		'<xsl:{#0} test="{$0}">\n\t{$1}\n</xsl:{#0}>'
+			},
+			
+			// XSL Otherwise:
+			{
+				key:			'tab',
+				before:			/<xsl:otherwise[^<>]*?>$/,
+				snippet:		'{#0}\n\t{$1}\n</xsl:otherwise>'
+			},
+			{
+				key:			'tab',
+				before:			/otherwise$/,
+				snippet:		'<xsl:{#0}>\n\t{$1}\n</xsl:{#0}>'
+			},
+			
+			// XSL Output:
+			{
+				key:			'tab',
+				before:			/output$/,
+				snippet:		'<xsl:{#0} method="{$0}" encoding="UTF-8" />'
+			},
+			
+			// XSL Stylesheet:
+			{
+				key:			'tab',
+				before:			/<xsl:stylesheet[^<>]*?>$/,
+				snippet:		'{#0}\n\t{$0}\n</xsl:stylesheet>'
+			},
+			{
+				key:			'tab',
+				before:			/stylesheet$/,
+				snippet:		'<?xml version="1.0" encoding="UTF-8"?>\n<xsl:{#0} version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\t{$0}\n</xsl:{#0}>'
+			},
+			
+			// XSL Template:
+			{
+				key:			'tab',
+				before:			/<xsl:template[^<>]*?>$/,
+				snippet:		'{#0}\n\t{$0}\n</xsl:template>'
+			},
+			{
+				key:			'tab',
+				before:			/template$/,
+				snippet:		'<xsl:{#0} match="{$0}" mode="{$1}">\n\t{$2}\n</xsl:{#0}>'
+			},
+			
+			// XSL Text:
+			{
+				key:			'tab',
+				before:			/<xsl:text[^<>]*?>$/,
+				snippet:		'{#0}{$0}</xsl:text>'
+			},
+			{
+				key:			'tab',
+				before:			/text$/,
+				snippet:		'<xsl:{#0}>{$2}</xsl:{#0}>'
 			}
 		]
 	},
