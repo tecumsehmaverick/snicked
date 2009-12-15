@@ -28,6 +28,9 @@
 	min-width: 6em;
 	padding: 5px;
 }
+.snicked-suggestions > li.current {
+	color: hsl(210, 10%, 90%);
+}
 
 textarea {
 	background: hsl(210, 10%, 20%);

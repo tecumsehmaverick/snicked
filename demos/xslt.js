@@ -1,77 +1,26 @@
 {
-	// Autocompletion:
 	autocomplete:	{
 		keys: {
 			9:		'tab',
-			13:		'enter'
+			13:		'enter',
+			62:		'tagit'
 		},
 		rules:	[
-			// HTML List:
+			// XSL Apply Templates:
 			{
-				key:			'tab',
-				before:			/<(ol|ul)[^<>]*?>$/,
-				snippet:		'{#0}\n\t<li>{$0}</li>\n</{#1}>'
-			},
-			{
-				key:			'enter',
-				before:			/<li>.*?$/,
-				after:			/^<\/li>/,
-				snippet:		'{#0}{#1}\n<li>{$0}</li>'
-			},
-			{
-				key:			'enter',
-				before:			/<\/li>\s*$/,
-				snippet:		'{#0}\n<li>{$0}</li>'
-			},
-			
-			// HTML Definition List:
-			{
-				key:			'tab',
-				before:			/<dl[^>]*?>$/,
-				snippet:		'{#0}\n\t<dt>{$0}</dt>\n</dl>'
-			},
-			{
-				key:			'enter',
-				before:			/<dt>.*?$/,
-				after:			/^<\/dt>/,
-				snippet:		'{#0}{#1}\n<dd>{$0}</dd>'
-			},
-			{
-				key:			'enter',
-				before:			/<\/dt>\s*$/,
-				snippet:		'{#0}\n<dd>{$0}</dd>'
-			},
-			{
-				key:			'enter',
-				before:			/<dd>.*?$/,
-				after:			/^<\/dd>/,
-				snippet:		'{#0}{#1}\n<dt>{$0}</dt>'
-			},
-			{
-				key:			'enter',
-				before:			/<\/dd>\s*$/,
-				snippet:		'{#0}\n<dt>{$0}</dt>'
-			},
-			
-			// XSL Apply templates:
-			{
-				label:			'xsl:apply-templates',
+				label:			'apply-templates',
 				snippet:		'<xsl:apply-templates select="{$0}" mode="{$0}">\n\t<xsl:with-param name="{$0}" select="{$1}" />{$2}\n</xsl:apply-templates>'
 			},
+			
+			// XSL Call Template:
 			{
-				key:			'tab',
-				before:			/apply-templates$/,
-				snippet:		'<xsl:{#0} select="{$0}" mode="{$1}" />{$2}'
-			},
-			{
-				key:			'enter',
-				before:			/<xsl:with-param[^<>]+\/>$/,
-				snippet:		'{#0}\n<xsl:with-param name="{$0}" select="{$1}" />{$2}'
+				label:			'call-template',
+				snippet:		'<xsl:call-template name="{$0}">\n\t<xsl:with-param name="{$0}" select="{$1}" />{$2}\n</xsl:call-template>'
 			},
 			
 			// XSL Choose:
 			{
-				label:			'xsl:choose',
+				label:			'choose',
 				snippet:		'<xsl:choose>\n\t<xsl:when test="{$0}">\n\t\t{$1}\n\t</xsl:when>\n</xsl:choose>'
 			},
 			{
@@ -79,111 +28,104 @@
 				before:			/<xsl:choose[^<>]*?>$/,
 				snippet:		'{#0}\n\t<xsl:when test="{$0}">\n\t\t{$1}\n\t</xsl:when>\n</xsl:choose>'
 			},
-			{
-				key:			'tab',
-				before:			/choose$/,
-				snippet:		'<xsl:{#0}>\n\t<xsl:when test="{$0}">\n\t\t{$1}\n\t</xsl:when>\n</xsl:{#0}>'
-			},
 			
 			// XSL Copy/Value Of:
 			{
-				label:			'xsl:copy-of',
+				label:			'copy-of',
 				snippet:		'<xsl:copy-of select="{$0}" />'
 			},
 			{
-				label:			'xsl:value-of',
+				label:			'value-of',
 				snippet:		'<xsl:value-of select="{$0}" />'
-			},
-			{
-				key:			'tab',
-				before:			/(copy|value)-of$/,
-				snippet:		'<xsl:{#0} select="{$0}" />'
 			},
 			
 			// XSL If/When:
 			{
-				key:			'tab',
-				before:			/<xsl:(if|when)[^<>]*?>$/,
-				snippet:		'{#0}\n\t{$1}\n</xsl:{#1}>'
+				key:			'tagit',
+				before:			/<xsl:(if|when)[^<>]*?$/,
+				snippet:		'{#0}>\n\t{$1}\n</xsl:{#1}>'
 			},
 			{
-				key:			'tab',
-				before:			/if$|when$/,
-				snippet:		'<xsl:{#0} test="{$0}">\n\t{$1}\n</xsl:{#0}>'
+				label:			'if',
+				snippet:		'<xsl:if test="{$0}">\n\t{$1}\n</xsl:if>'
+			},
+			{
+				label:			'when',
+				snippet:		'<xsl:when test="{$0}">\n\t{$1}\n</xsl:when>'
 			},
 			
 			// XSL Otherwise:
 			{
-				key:			'tab',
-				before:			/<xsl:otherwise[^<>]*?>$/,
-				snippet:		'{#0}\n\t{$1}\n</xsl:otherwise>'
+				key:			'tagit',
+				before:			/<xsl:otherwise[^<>]*?$/,
+				snippet:		'{#0}>\n\t{$1}\n</xsl:otherwise>'
 			},
 			{
-				key:			'tab',
-				before:			/otherwise$/,
-				snippet:		'<xsl:{#0}>\n\t{$1}\n</xsl:{#0}>'
+				label:			'otherwise',
+				snippet:		'<xsl:otherwise>\n\t{$1}\n</xsl:otherwise>'
 			},
 			
 			// XSL Output:
 			{
-				key:			'tab',
-				before:			/output$/,
-				snippet:		'<xsl:{#0} method="{$0}" encoding="UTF-8" />'
+				label:			'output',
+				snippet:		'<xsl:output method="{$0}" encoding="UTF-8" />'
 			},
 			
 			// XSL Stylesheet:
 			{
-				key:			'tab',
-				before:			/<xsl:stylesheet[^<>]*?>$/,
-				snippet:		'{#0}\n\t{$0}\n</xsl:stylesheet>'
+				key:			'tagit',
+				before:			/<xsl:stylesheet[^<>]*?$/,
+				snippet:		'{#0}>\n\t{$0}\n</xsl:stylesheet>'
 			},
 			{
-				key:			'tab',
-				before:			/stylesheet$/,
-				snippet:		'<?xml version="1.0" encoding="UTF-8"?>\n<xsl:{#0} version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\t{$0}\n</xsl:{#0}>'
+				label:			'stylesheet',
+				snippet:		'<?xml version="1.0" encoding="UTF-8"?>\n<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\t{$0}\n</xsl:stylesheet>'
 			},
 			
 			// XSL Template:
 			{
-				key:			'tab',
-				before:			/<xsl:template[^<>]*?>$/,
-				snippet:		'{#0}\n\t{$0}\n</xsl:template>'
+				key:			'tagit',
+				before:			/<xsl:template[^<>]*?$/,
+				snippet:		'{#0}>\n\t{$0}\n</xsl:template>'
 			},
 			{
-				key:			'tab',
-				before:			/template$/,
-				snippet:		'<xsl:{#0} match="{$0}" mode="{$1}">\n\t{$2}\n</xsl:{#0}>'
+				label:			'template',
+				snippet:		'<xsl:template match="{$0}" mode="{$1}">\n\t{$2}\n</xsl:template>'
 			},
 			
 			// XSL Text:
 			{
-				key:			'tab',
-				before:			/<xsl:text[^<>]*?>$/,
-				snippet:		'{#0}{$0}</xsl:text>'
+				key:			'tagit',
+				before:			/<xsl:text[^<>]*?$/,
+				snippet:		'{#0}>{$0}</xsl:text>'
 			},
 			{
-				key:			'tab',
-				before:			/text$/,
-				snippet:		'<xsl:{#0}>{$2}</xsl:{#0}>'
+				label:			'text',
+				snippet:		'<xsl:text>{$0}</xsl:text>'
+			},
+			
+			// XSL With Param:
+			{
+				label:			'with-param',
+				snippet:		'<xsl:with-param name="{$0}" select="{$1}" />{$2}'
+			},
+			{
+				key:			'enter',
+				before:			/<xsl:with-param[^<>]+\/>$/,
+				snippet:		'{#0}\n<xsl:with-param name="{$0}" select="{$1}" />{$2}'
+			},
+			
+			// Any XML end tag:
+			{
+				key:			'tagit',
+				before:			/<(a)$/,
+				snippet:		'{#0} href="{$0}">{$1}</{#1}>'
+			},
+			{
+				key:			'tagit',
+				before:			/<([a-z][a-z0-9_-]*(:[a-z][a-z0-9_-]*)?)$/,
+				snippet:		'{#0}>{$0}</{#1}>'
 			}
-		]
-	},
-	
-	indentation: {
-		rules:	[
-			{
-				matchBefore:	/[{]$/,
-				indentLevel:	1
-			},
-			{
-				matchBefore:	/<x>$/,
-				matchAfter:		/^<\/x>/,
-				indentLevel:	-1
-			},
-			{
-				matchBefore:	/<x>$/,
-				indentLevel:	1
-			},
 		]
 	}
 }

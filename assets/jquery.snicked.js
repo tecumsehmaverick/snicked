@@ -17,64 +17,183 @@
 	-------------------------------------------------------------------------*/
 		
 		(function() {
-			var current = null;
-			var next = function(editor, selection) {
-				var position = current.points.shift();
-				var length = editor.val().length;
-				
-				current.offset += (length - current.length);
-				current.length = length;
-				
-				selection.start = position + current.offset;
-				selection.end = selection.start;
-				
-				editor.setSelection(selection);
-				
-				if (current.points.length == 0) {
-					current = null;
+			var states = {
+				rule:		null,
+				suggestion:	null
+			};
+			var methods = {
+				next: function(editor, selection) {
+					var position = states.rule.points.shift();
+					var length = editor.val().length;
+					
+					states.rule.offset += (length - states.rule.length);
+					states.rule.length = length;
+					
+					selection.start = position + states.rule.offset;
+					selection.end = selection.start;
+					
+					editor.setSelection(selection);
+					
+					if (states.rule.points.length == 0) {
+						states.rule = null;
+						
+						return true;
+					}
 					
 					return true;
-				}
+				},
 				
-				return true;
-			};
-			
-			//editors.addChangeHandler(function(editor) {
-			//	console.log('wtf');
-			//	jQuery('.snicked-suggestions').remove();
-			//});
-			
-			editors.addKeyHandler(function(editor, key, event) {
-				var selection = editor.getSelection();
-				var before = editor.getBefore(selection);
+				// Start using a rule:
+				start: function(editor, selection, before, after, rule) {
+					var snippet = rule.snippet, point = null;
+					var indent = editor.getIndentation();
+					var lines = snippet.split("\n");
+					var captures = before.match(rule.before).concat(after.match(rule.after));
+					
+					// Remove matched parts:
+					editor.setBefore(selection, before.replace(rule.before, ''));
+					editor.setAfter(selection, after.replace(rule.after, ''));
+					
+					before = editor.getBefore(selection);
+					after = editor.getAfter(selection);
+					
+					// Reindent rule:
+					lines = jQuery(lines).map(function(index, line) {
+						if (!index) return line;
+						
+						return indent + line;
+					});
+					
+					snippet = lines.get().join("\n");
+					
+					// Set current rule:
+					states.rule = {
+						length:		0,
+						offset:		0,
+						selection:	selection,
+						points:		[]
+					};
+					
+					// Find all capture points:
+					while ((point = snippet.match(/\{#([0-9]+)\}/))) {
+						var index = parseInt(point[1]);
+						
+						if (captures[index]) {
+							snippet = snippet.replace(point[0], captures[index]);
+						}
+						
+						else {
+							snippet = snippet.replace(point[0], '');
+						}
+					}
+					
+					// Find all cursor points:
+					while ((point = snippet.match(/\{\$[0-9]+\}/))) {
+						states.rule.points.push(
+							snippet.indexOf(point[0])
+							+ before.length
+						);
+						snippet = snippet.replace(point[0], '');
+					}
+					
+					// No jump points:
+					if (!states.rule.points.length) {
+						before += snippet;
+						states.rule = null;
+						editor.setBefore(selection, before);
+						
+						return true;
+					}
+					
+					editor.insertBefore(selection, snippet);
+					
+					states.rule.length = editor.val().length;
+					states.rule.position = before.length;
+					
+					methods.next(editor, selection);
+					
+					return true;
+				},
 				
-				if (!current && /\b\w+/.test(before)) {
+				// Redraw suggestions:
+				redraw: function(editor, before) {
+					var word = before.match(/\b[a-z0-9:_]+$/i).pop();
 					var rules = [];
-					var word = before.match(/\b\w+/).pop();
 					
 					jQuery(autocomplete.rules).each(function(index, rule) {
-						if (rule.label && rule.label.indexOf(word) == 0) {
+						if (rule.label && rule.label.indexOf(word) === 0) {
 							rules.push(rule);
 						}
 					});
 					
-					jQuery('.snicked-suggestions').remove();
-					
 					if (rules.length) {
 						var list = jQuery('<ol class="snicked-suggestions" />');
 						
+						if (states.suggestion == null) {
+							states.suggestion = {};
+						}
+						
+						if (states.suggestion.index < 0) {
+							states.suggestion.index = rules.length - 1;
+						}
+						
+						else if (states.suggestion.index >= rules.length) {
+							states.suggestion.index = 0;
+						}
+						
+						else if (states.suggestion.index == undefined) {
+							states.suggestion.index = 0;
+						}
+						
 						jQuery(rules).each(function(index, rule) {
-							jQuery('<li />')
+							var item = jQuery('<li />')
 								.text(rule.label)
 								.appendTo(list);
+							
+							if (states.suggestion.index === index) {
+								states.suggestion.rule = rule;
+								item.addClass('current');
+							}
 						});
 						
 						list.insertAfter(editor);
 					}
 				}
+			};
+			
+			editors.addKeyHandler(function(editor, key, event) {
+				var selection = editor.getSelection();
+				var before = editor.getBefore(selection);
 				
-				// Find completion:
-				if (!current && autocomplete.keys[key]) {
+				jQuery('.snicked-suggestions').remove();
+				
+				// Choose:
+				if (states.suggestion != null && event.altKey && (key == 37 || key == 39)) {
+					if (key == 37) states.suggestion.index -= 1;
+					if (key == 39) states.suggestion.index += 1;
+				}
+				
+				// Apply:
+				else if (states.suggestion != null && key == 9) {
+					var after = editor.getAfter(selection);
+					var before = before.replace(/\b[a-z0-9:_]+$/i, '');
+					var rule = states.suggestion.rule;
+					
+					return methods.start(editor, selection, before, after, rule);
+				}
+				
+				// Redraw:
+				if (!states.rule && /\b[a-z0-9:_]+$/i.test(before)) {
+					methods.redraw(editor, before);
+				}
+				
+				// Reset:
+				else {
+					states.suggestion = null;
+				}
+				
+				// Find rule:
+				if (!states.rule && autocomplete.keys[key]) {
 					var trigger = autocomplete.keys[key];
 					var after = editor.getAfter(selection);
 					var completed = false;
@@ -89,74 +208,7 @@
 							return true;
 						}
 						
-						var snippet = rule.snippet, point = null;
-						var indent = editor.getIndentation();
-						var lines = snippet.split("\n");
-						var captures = before.match(rule.before).concat(after.match(rule.after));
-						
-						// Remove matched parts:
-						editor.setBefore(selection, before.replace(rule.before, ''));
-						editor.setAfter(selection, after.replace(rule.after, ''));
-						
-						before = editor.getBefore(selection);
-						after = editor.getAfter(selection);
-						
-						// Reindent snippet:
-						lines = jQuery(lines).map(function(index, line) {
-							if (!index) return line;
-							
-							return indent + line;
-						});
-						
-						snippet = lines.get().join("\n");
-						
-						// Set current state:
-						current = {
-							length:		0,
-							offset:		0,
-							selection:	selection,
-							points:		[]
-						};
-						
-						// Find all capture points:
-						while ((point = snippet.match(/\{#([0-9]+)\}/))) {
-							var index = parseInt(point[1]);
-							
-							if (captures[index]) {
-								snippet = snippet.replace(point[0], captures[index]);
-							}
-							
-							else {
-								snippet = snippet.replace(point[0], '');
-							}
-						}
-						
-						// Find all cursor points:
-						while ((point = snippet.match(/\{\$[0-9]+\}/))) {
-							current.points.push(
-								snippet.indexOf(point[0])
-								+ before.length
-							);
-							snippet = snippet.replace(point[0], '');
-						}
-						
-						// No jump points:
-						if (!current.points.length) {
-							before += snippet;
-							current = null;
-							editor.setBefore(selection, before);
-							completed = true;
-							
-							return false;
-						}
-						
-						editor.insertBefore(selection, snippet);
-						
-						current.length = editor.val().length;
-						current.position = before.length;
-						
-						next(editor, selection);
-						completed = true;
+						completed = methods.start(editor, selection, before, after, rule);
 						
 						return false;
 					});
@@ -164,9 +216,9 @@
 					return completed;
 				}
 				
-				// Work on current snippet:
-				if (current && key == 9) {
-					return next(editor, selection);
+				// Work on current rule:
+				if (states.rule && key == 9) {
+					return methods.next(editor, selection);
 				}
 				
 				return false;
