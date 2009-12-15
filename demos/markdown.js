@@ -6,18 +6,35 @@
 			13:		'enter'
 		},
 		rules:	[
-			// Brace completion:
-			
-			// Unordered list:
+			// Headers:
 			{
 				key:			'enter',
-				before:			/\s*\*\s*$/,
+				before:			/^([ \t>]*)(#+)\s*(.*)$/,
+				snippet:		'{#0}\n{#1}\n{#1}'
+			},
+			
+			// Blockquote:
+			{
+				key:			'enter',
+				before:			/\s*>\s*$/,
 				snippet:		'\n\n{$0}'
 			},
 			{
 				key:			'enter',
-				before:			/\s*\*\s*(.*?)$/,
-				snippet:		'\n* {#1}\n* {$0}'
+				before:			/\s*(>)\s*(.*?)$/,
+				snippet:		'\n{#1} {#2}\n{#1} {$0}'
+			},
+			
+			// Unordered list:
+			{
+				key:			'enter',
+				before:			/\s*[*-]\s*$/,
+				snippet:		'\n\n{$0}'
+			},
+			{
+				key:			'enter',
+				before:			/\s*([*-])\s*(.*?)$/,
+				snippet:		'\n{#1} {#2}\n{#1} {$0}'
 			}
 		]
 	}
