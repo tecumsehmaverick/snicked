@@ -41,7 +41,7 @@
 			
 			editors.addKeyHandler(function(editor, key) {
 				var selection = editor.getSelection();
-				
+				console.log(key);
 				// Find completion:
 				if (!current && autocomplete.keys[key]) {
 					var trigger = autocomplete.keys[key];
