@@ -235,7 +235,7 @@
 				if (key == 9 && !event.forceTab) return false;
 				
 				jQuery(object.keyHandlers).each(function() {
-					if (this(object, key)) {					
+					if (this(object, key, event)) {					
 						handled = true;
 						
 						return false;

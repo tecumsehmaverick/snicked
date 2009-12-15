@@ -39,13 +39,43 @@
 				return true;
 			};
 			
-			editors.addKeyHandler(function(editor, key) {
+			//editors.addChangeHandler(function(editor) {
+			//	console.log('wtf');
+			//	jQuery('.snicked-suggestions').remove();
+			//});
+			
+			editors.addKeyHandler(function(editor, key, event) {
 				var selection = editor.getSelection();
+				var before = editor.getBefore(selection);
+				
+				if (!current && /\b\w+/.test(before)) {
+					var rules = [];
+					var word = before.match(/\b\w+/).pop();
+					
+					jQuery(autocomplete.rules).each(function(index, rule) {
+						if (rule.label && rule.label.indexOf(word) == 0) {
+							rules.push(rule);
+						}
+					});
+					
+					jQuery('.snicked-suggestions').remove();
+					
+					if (rules.length) {
+						var list = jQuery('<ol class="snicked-suggestions" />');
+						
+						jQuery(rules).each(function(index, rule) {
+							jQuery('<li />')
+								.text(rule.label)
+								.appendTo(list);
+						});
+						
+						list.insertAfter(editor);
+					}
+				}
 				
 				// Find completion:
 				if (!current && autocomplete.keys[key]) {
 					var trigger = autocomplete.keys[key];
-					var before = editor.getBefore(selection);
 					var after = editor.getAfter(selection);
 					var completed = false;
 					

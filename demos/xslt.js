@@ -55,9 +55,8 @@
 			
 			// XSL Apply templates:
 			{
-				key:			'tab',
-				before:			/(<xsl:apply-templates[^<>]*?)\s*\/?>(\s*)$/,
-				snippet:		'{#1}>{#3}\n\t<xsl:with-param name="{$0}" select="{$1}" />{$2}\n</xsl:apply-templates>'
+				label:			'xsl:apply-templates',
+				snippet:		'<xsl:apply-templates select="{$0}" mode="{$0}">\n\t<xsl:with-param name="{$0}" select="{$1}" />{$2}\n</xsl:apply-templates>'
 			},
 			{
 				key:			'tab',
@@ -72,6 +71,10 @@
 			
 			// XSL Choose:
 			{
+				label:			'xsl:choose',
+				snippet:		'<xsl:choose>\n\t<xsl:when test="{$0}">\n\t\t{$1}\n\t</xsl:when>\n</xsl:choose>'
+			},
+			{
 				key:			'tab',
 				before:			/<xsl:choose[^<>]*?>$/,
 				snippet:		'{#0}\n\t<xsl:when test="{$0}">\n\t\t{$1}\n\t</xsl:when>\n</xsl:choose>'
@@ -83,6 +86,14 @@
 			},
 			
 			// XSL Copy/Value Of:
+			{
+				label:			'xsl:copy-of',
+				snippet:		'<xsl:copy-of select="{$0}" />'
+			},
+			{
+				label:			'xsl:value-of',
+				snippet:		'<xsl:value-of select="{$0}" />'
+			},
 			{
 				key:			'tab',
 				before:			/(copy|value)-of$/,
