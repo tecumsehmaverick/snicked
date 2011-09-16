@@ -7,8 +7,6 @@
 		var autocomplete = {};
 		var indentation = [];
 
-		console.log(this);
-
 		if (language) {
 			autocomplete = language.autocomplete;
 			indentation = language.indentation;
@@ -120,7 +118,7 @@
 			editors.addKeyHandler(function(editor, key, event) {
 				var selection = editor.getSelection();
 				var before = editor.getBefore(selection);
-				console.log(key);
+
 				// Find rule:
 				if (!states.rule && autocomplete.keys[key]) {
 					var trigger = autocomplete.keys[key];
