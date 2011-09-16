@@ -120,7 +120,7 @@
 			editors.addKeyHandler(function(editor, key, event) {
 				var selection = editor.getSelection();
 				var before = editor.getBefore(selection);
-
+				console.log(key);
 				// Find rule:
 				if (!states.rule && autocomplete.keys[key]) {
 					var trigger = autocomplete.keys[key];
@@ -159,51 +159,68 @@
 	-------------------------------------------------------------------------*/
 
 		(function() {
-			editors.addKeyHandler(function(editor, key) {
-				var selection = editor.getSelection();
-
+			editors.addKeyHandler(function(editor, key, event) {
 				if (key == 9) {
-					editor.insertBefore(selection, "\t");
+					if (editor.selection.getText()) {
+						var text = editor.selection.getText();
+						var lines = [];
+						var before = editor.selection.getPrecedingText();
+						var after = editor.selection.getFollowingText();
+						var reset = false;
+
+						// Expand selection to beginning of line:
+						if (/\n[^\n]+$/.test(before)) {
+							text = before.match(/[^\n]+$/) + text;
+							before = before.replace(/[^\n]+$/, '');
+							reset = true;
+						}
+
+						if (/^[^\n]+\n/.test(after)) {
+							text = text + after.match(/^[^\n]+/);
+							after = after.replace(/^[^\n]+/, '');
+							reset = true;
+						}
+
+						if (reset) {
+							editor.selection.setText(text);
+							editor.selection.setPrecedingText(before);
+							editor.selection.setFollowingText(after);
+						}
+
+						lines = text.split("\n");
+
+						lines = lines.map(function(line) {
+							if (event.shiftKey) {
+								return line.replace(/^\t/, '');
+							}
+
+							else {
+								return "\t" + line;
+							}
+						});
+
+						editor.selection.setText(lines.join("\n"));
+					}
+
+					else if (event.shiftKey) {
+						var before = editor.selection.getPrecedingText();
+
+						before = before.replace(/\t$/, '');
+						editor.selection.setPrecedingText(before);
+					}
+
+					else {
+						editor.selection.insertTextBefore("\t");
+					}
+
 
 					return true;
 				}
 
 				else if (key == 13) {
-					var after = editor.selection.getFollowingText();
-					var before = editor.selection.getPrecedingText();
 					var indent = editor.getIndentation();
 
-					/*
-					jQuery(indentationRules).each(function(index, rule) {
-						var matched = false;
-
-						if (rule.matchBefore && rule.matchAfter) {
-							matched = rule.matchBefore.test(before) && rule.matchAfter.test(after);
-						}
-
-						else if (rule.matchBefore) {
-							matched = rule.matchBefore.test(before);
-						}
-
-						else if (rule.matchAfter) {
-							matched = rule.matchAfter.test(after);
-						}
-
-						if (matched) {
-							if (rule.indentLevel == 1) {
-								indent += "\t";
-							}
-
-							else if (rule.indentLevel == -1) {
-								indent = indent.replace('\t', '');
-							}
-
-							return false;
-						}
-					});
-					*/
-
-					editor.insertBefore(selection, "\n" + indent);
+					editor.selection.insertTextBefore("\n" + indent);
 
 					return true;
 				}
