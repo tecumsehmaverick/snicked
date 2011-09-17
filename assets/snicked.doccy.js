@@ -10,13 +10,6 @@ jQuery.fn.snickedDoccy = function() {
 				123:	'open'
 			},
 			rules:	[
-				// Wrap "CSS" selector with element braces:
-				{
-					key:		'tab',
-					before:		/[a-z][a-z0-9#.]*:$/i,
-					snippet:	'{{#0} {$0}}'
-				},
-
 				// Auto-close end brace:
 				{
 					key:		'open',
@@ -28,7 +21,65 @@ jQuery.fn.snickedDoccy = function() {
 					key:		'colon',
 					before:		/[{]a$/,
 					after:		/[}]/,
-					snippet:	'{a @href {$0}: {$1}}{$2}'
+					snippet:	'{a @href {$0}: {$1}}'
+				},
+
+				// Expand A element
+				{
+					key:		'tab',
+					before:		/a:$/i,
+					snippet:	'{a @href {$0}: {$1}}'
+				},
+
+				// Auto-complete DL elements:
+				{
+					key:		'colon',
+					before:		/[{]dl$/,
+					after:		/[}]/,
+					snippet:	'{dl:\n\t{dt: {$0}}\n\t{dd: {$1}}\n}'
+				},
+
+				// Expand DL element
+				{
+					key:		'tab',
+					before:		/dl:$/i,
+					snippet:	'{dl:\n\t{dt: {$0}}\n\t{dd: {$1}}\n}'
+				},
+
+				// Audo-insert DD element:
+				{
+					key:		'enter',
+					before:		/[{]dt:.*?[}]$/,
+					snippet:	'{#0}\n{dd: {$0}}'
+				},
+
+				// Audo-insert DT element:
+				{
+					key:		'enter',
+					before:		/[{]dd:.*?[}]$/,
+					snippet:	'{#0}\n{dt: {$0}}'
+				},
+
+				// Auto-complete OL, UL elements:
+				{
+					key:		'colon',
+					before:		/[{](ol|ul)$/,
+					after:		/[}]/,
+					snippet:	'{{#1}:\n\t{li: {$0}}\n}'
+				},
+
+				// Expand OL, UL element
+				{
+					key:		'tab',
+					before:		/(ol|ul):$/i,
+					snippet:	'{{#1}:\n\t{li: {$0}}\n}'
+				},
+
+				// Audo-insert LI element:
+				{
+					key:		'enter',
+					before:		/[{]li:.*?[}]$/,
+					snippet:	'{#0}\n{li: {$0}}'
 				},
 
 				// Auto-complete PRE element:
@@ -36,7 +87,21 @@ jQuery.fn.snickedDoccy = function() {
 					key:		'colon',
 					before:		/[{]pre$/,
 					after:		/[}]/,
-					snippet:	'{pre:\n{$0}}{$1}'
+					snippet:	'{pre:\n{$0}}'
+				},
+
+				// Expand PRE element
+				{
+					key:		'tab',
+					before:		/pre:$/i,
+					snippet:	'{pre:\n{$0}}'
+				},
+
+				// Expand any element:
+				{
+					key:		'tab',
+					before:		/[a-z][a-z0-9#.]*:$/i,
+					snippet:	'{{#0} {$0}}'
 				},
 
 				// Add space when typing colon in an empty element:
@@ -44,23 +109,6 @@ jQuery.fn.snickedDoccy = function() {
 					key:		'colon',
 					after:		/^[}]/,
 					snippet:	': {$0}}'
-				},
-
-				// Convert two hyphens into an mdash:
-				{
-					key:		'hyphen',
-					before:		/-$/,
-					snippet:	'—'
-				},
-				{
-					key:		'space',
-					before:		/-{2}$/,
-					snippet:	'— '
-				},
-				{
-					key:		'tab',
-					before:		/-{2}$/,
-					snippet:	'—'
 				}
 			]
 		}
